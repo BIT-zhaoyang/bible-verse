@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2c5364" />
+      <stop offset="50%" stop-color="#203a43" />
+      <stop offset="100%" stop-color="#0f2027" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect x="64" y="64" width="1072" height="502" rx="30" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.14)" />
+  <text x="96" y="124" fill="rgba(255,255,255,0.82)" font-size="24" font-family="Arial, sans-serif">SEEDED DEMO CARD</text>
+  <text x="96" y="208" fill="#ffffff" font-size="50" font-family="Georgia, serif">Psalm 23:1</text>
+  <text x="96" y="294" fill="rgba(255,255,255,0.92)" font-size="34" font-family="Georgia, serif">God is not distant from your daily needs. His care is steady, personal, and enough for today.</text>
+</svg>
