@@ -2,6 +2,8 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 
+import { AdminHeader } from "@/components/admin-chrome";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
 import { getContentAdminList } from "@/lib/publication";
 
@@ -24,26 +26,35 @@ async function ContentPageContent() {
 
   return (
     <div className="admin-shell">
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10">
+      <main className="admin-main-shell">
+        <AdminHeader currentPath="/admin/content" />
+
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.28em] text-slate-400">
               Content library
             </p>
-            <h1 className="mt-2 text-4xl font-semibold text-white">
+            <h1 className="mt-2 font-display text-5xl font-semibold text-white">
               Managed verses
             </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
+              Review all prepared verses, current status, and the most recent publish
+              date for each passage.
+            </p>
           </div>
-          <Link
-            href="/admin"
-            className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white"
-          >
-            Dashboard
+          <Link href="/admin" className="text-sm text-slate-300 underline-offset-4 hover:underline">
+            Back to dashboard
           </Link>
         </div>
 
-        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5">
-          <table className="min-w-full divide-y divide-white/10 text-left text-sm">
+        <Card className="overflow-hidden border-white/10 bg-white/[0.06] text-white">
+          <CardHeader>
+            <h2 className="font-display text-3xl font-semibold text-white">
+              Verse inventory
+            </h2>
+          </CardHeader>
+          <CardContent className="overflow-x-auto p-0">
+            <table className="min-w-full divide-y divide-white/10 text-left text-sm">
             <thead className="bg-slate-950/40 text-slate-300">
               <tr>
                 <th className="px-4 py-4 font-medium">Reference</th>
@@ -65,8 +76,9 @@ async function ContentPageContent() {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { ArrowLeft } from "lucide-react";
 
 import {
   approveGenerationAction,
   regenerateForDateAction,
   rejectGenerationAction,
 } from "../../actions";
+import { AdminHeader } from "@/components/admin-chrome";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth";
 import { getReviewData } from "@/lib/publication";
 
@@ -39,29 +43,30 @@ async function ReviewPageContent({
 
   return (
     <div className="admin-shell">
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-8 px-6 py-10">
+      <main className="admin-main-shell">
+        <AdminHeader currentPath="/admin/publications" />
+
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm uppercase tracking-[0.28em] text-slate-400">
               Publication review
             </p>
-            <h1 className="mt-2 text-4xl font-semibold text-white">{date}</h1>
+            <h1 className="mt-2 font-display text-5xl font-semibold text-white">
+              {date}
+            </h1>
           </div>
           <div className="flex gap-3">
-            <Link
-              href="/admin"
-              className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-white"
-            >
-              Dashboard
-            </Link>
+            <Button variant="secondary" asChild>
+              <Link href="/admin/publications">
+                <ArrowLeft className="h-4 w-4" />
+                All dates
+              </Link>
+            </Button>
             <form action={regenerateForDateAction}>
               <input type="hidden" name="targetDate" value={date} />
-              <button
-                type="submit"
-                className="rounded-full bg-amber-300 px-5 py-3 text-sm font-semibold text-slate-950"
-              >
+              <Button type="submit" variant="admin">
                 Regenerate
-              </button>
+              </Button>
             </form>
           </div>
         </div>
@@ -73,22 +78,27 @@ async function ReviewPageContent({
         ) : null}
 
         {publication ? (
-          <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6 text-sm text-slate-300">
-            <p className="uppercase tracking-[0.24em] text-slate-400">
-              Current publication
-            </p>
-            <pre className="mt-4 overflow-x-auto rounded-2xl bg-slate-950/60 p-4">
-              {JSON.stringify(publication, null, 2)}
-            </pre>
-          </section>
+          <Card className="border-white/10 bg-white/[0.06] text-sm text-slate-300">
+            <CardHeader>
+              <p className="uppercase tracking-[0.24em] text-slate-400">
+                Current publication
+              </p>
+            </CardHeader>
+            <CardContent>
+              <pre className="overflow-x-auto rounded-2xl bg-slate-950/60 p-4">
+                {JSON.stringify(publication, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
         ) : null}
 
         <div className="grid gap-6">
           {generations.map((generation) => (
-            <article
+            <Card
               key={generation.id}
-              className="rounded-[2rem] border border-white/10 bg-white/5 p-6"
+              className="border-white/10 bg-white/[0.06] text-white"
             >
+              <CardContent className="p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-2">
                   <p className="text-sm uppercase tracking-[0.24em] text-slate-400">
@@ -106,22 +116,16 @@ async function ReviewPageContent({
                     <input type="hidden" name="targetDate" value={date} />
                     <input type="hidden" name="generationId" value={generation.id} />
                     <input type="hidden" name="slug" value={generation.slug} />
-                    <button
-                      type="submit"
-                      className="rounded-full bg-emerald-300 px-5 py-3 text-sm font-semibold text-slate-950"
-                    >
+                    <Button type="submit" variant="secondary">
                       Approve
-                    </button>
+                    </Button>
                   </form>
                   <form action={rejectGenerationAction}>
                     <input type="hidden" name="targetDate" value={date} />
                     <input type="hidden" name="generationId" value={generation.id} />
-                    <button
-                      type="submit"
-                      className="rounded-full border border-rose-300/40 px-5 py-3 text-sm font-semibold text-rose-100"
-                    >
+                    <Button type="submit" variant="ghost" className="border border-rose-300/30 text-rose-100 hover:bg-rose-300/10 hover:text-white">
                       Reject
-                    </button>
+                    </Button>
                   </form>
                 </div>
               </div>
@@ -155,7 +159,8 @@ async function ReviewPageContent({
                 <p className="font-semibold text-white">Prompt snapshot</p>
                 <p className="mt-2 leading-7">{generation.promptSnapshot}</p>
               </div>
-            </article>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </main>
