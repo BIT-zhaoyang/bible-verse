@@ -1,0 +1,1 @@
+ALTER TABLE "image_generations" ADD COLUMN "card_image_portrait_url" text;

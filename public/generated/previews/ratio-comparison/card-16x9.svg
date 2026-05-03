@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8733fd" />
+      <stop offset="55%" stop-color="#2a3f29" />
+      <stop offset="100%" stop-color="#4cbf7f" />
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(8, 15, 26, 0.08)" />
+      <stop offset="100%" stop-color="rgba(8, 15, 26, 0.78)" />
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="18%" r="58%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.26)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <rect width="1600" height="900" fill="url(#overlay)" />
+  <circle cx="1248" cy="171" r="198" fill="url(#glow)" />
+  <circle cx="288" cy="738" r="162" fill="rgba(255,255,255,0.07)" />
+  <rect x="84" y="84" width="1432" height="732" rx="34" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
+  <text x="120" y="140" fill="rgba(255,255,255,0.84)" font-size="26" font-family="Arial, sans-serif">TODAY&apos;S VERSE · 16:9</text>
+  <text x="120" y="234" fill="#ffffff" font-size="64" font-family="Georgia, serif">The Lord is my shepherd; I shall</text><text x="120" y="316" fill="#ffffff" font-size="64" font-family="Georgia, serif">not want.</text>
+  <text x="120" y="446" fill="rgba(255,255,255,0.9)" font-size="28" font-family="Arial, sans-serif">A calm reminder that God provides what is needed,</text><text x="120" y="487" fill="rgba(255,255,255,0.9)" font-size="28" font-family="Arial, sans-serif">even when the path ahead feels uncertain.</text>
+  <text x="120" y="728" fill="#ffffff" font-size="36" font-family="Arial, sans-serif">Psalm 23:1</text>
+  <text x="1564" y="858" text-anchor="end" fill="rgba(255,255,255,0.74)" font-size="22" font-family="Arial, sans-serif">Bible Daily Verse</text>
+</svg>

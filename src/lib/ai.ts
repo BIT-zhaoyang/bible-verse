@@ -30,6 +30,7 @@ type BackgroundProviderConfig = {
   model: string;
   siteName: string;
   openAiApiKey?: string;
+  openRouterApiKey?: string;
 };
 
 function toDataUrl(mediaType: string, buffer: Buffer) {
@@ -138,6 +139,126 @@ async function createOpenAiBackground(
   };
 }
 
+function parseImageDataUrl(dataUrl: string) {
+  const match = /^data:(image\/(?:png|jpeg|webp|svg\+xml));base64,([\s\S]+)$/.exec(dataUrl);
+
+  if (!match) {
+    throw new Error("Image response did not include a supported base64 data URL.");
+  }
+
+  const mediaType = match[1];
+  const base64Payload = match[2];
+  const extension =
+    mediaType === "image/png"
+      ? "png"
+      : mediaType === "image/jpeg"
+        ? "jpeg"
+        : mediaType === "image/webp"
+          ? "webp"
+          : "svg";
+
+  return {
+    mediaType,
+    extension: extension as GeneratedBackgroundExtension,
+    buffer: Buffer.from(base64Payload, "base64"),
+    dataUrl,
+  };
+}
+
+async function createOpenRouterBackground(
+  config: BackgroundProviderConfig,
+  prompt: string,
+  fetchImpl: typeof fetch,
+): Promise<GeneratedBackground> {
+  if (!config.openRouterApiKey) {
+    throw new Error("OPENROUTER_API_KEY is required when AI_PROVIDER is set to openrouter.");
+  }
+
+  const requestBody: {
+    model: string;
+    messages: Array<{
+      role: "user";
+      content: string;
+    }>;
+    modalities: string[];
+    stream: boolean;
+    max_tokens: number;
+  } = {
+    model: config.model,
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    modalities: ["image", "text"],
+    stream: false,
+    max_tokens: 256,
+  };
+
+  async function requestImage(content: string) {
+    const response = await fetchImpl("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.openRouterApiKey}`,
+      },
+      body: JSON.stringify({
+        ...requestBody,
+        messages: [
+          {
+            role: "user",
+            content,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const message = (await response.text()).trim();
+      throw new Error(
+        `OpenRouter image generation failed (${response.status}): ${message || "No response body."}`,
+      );
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{
+        message?: {
+          images?: Array<{
+            image_url?: {
+              url?: string;
+            };
+            imageUrl?: {
+              url?: string;
+            };
+          }>;
+        };
+      }>;
+    };
+
+    const firstImage = payload.choices?.[0]?.message?.images?.[0];
+    return firstImage?.image_url?.url ?? firstImage?.imageUrl?.url ?? null;
+  }
+
+  const retryPrompt = `${prompt}\n\nGenerate a single reverent background image only. Do not call tools. Return image output.`;
+  const imageDataUrl = (await requestImage(prompt)) ?? (await requestImage(retryPrompt));
+
+  if (!imageDataUrl) {
+    throw new Error("OpenRouter image generation response did not include image data.");
+  }
+
+  const parsed = parseImageDataUrl(imageDataUrl);
+
+  return {
+    provider: config.provider,
+    model: config.model,
+    buffer: parsed.buffer,
+    extension: parsed.extension,
+    mediaType: parsed.mediaType,
+    dataUrl: parsed.dataUrl,
+  };
+}
+
 export async function generateBackgroundForProvider(
   config: BackgroundProviderConfig,
   prompt: string,
@@ -151,6 +272,10 @@ export async function generateBackgroundForProvider(
     return createOpenAiBackground(config, prompt, fetchImpl);
   }
 
+  if (config.provider === "openrouter") {
+    return createOpenRouterBackground(config, prompt, fetchImpl);
+  }
+
   throw new Error(`Unsupported AI provider: ${config.provider}`);
 }
 
@@ -161,6 +286,7 @@ export async function generateBackground(prompt: string): Promise<GeneratedBackg
       model: appConfig.aiProviderModel,
       siteName: appConfig.siteName,
       openAiApiKey: process.env.OPENAI_API_KEY,
+      openRouterApiKey: process.env.OPENROUTER_API_KEY,
     },
     prompt,
   );

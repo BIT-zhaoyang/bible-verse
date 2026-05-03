@@ -105,24 +105,27 @@ For each generation run, the app currently creates three SVG files:
 
 This comes from [src/lib/ai.ts](/Users/bytedance/Work/bible-verse/src/lib/ai.ts).
 
-Today, this file does not call a real external AI image provider. Instead, it generates a deterministic SVG background from the verse prompt text.
+Today, this file can either generate a deterministic local SVG background or call a real external AI image provider, depending on configuration.
 
 So when you see fields like:
 
 - `AI_PROVIDER`
 - `AI_PROVIDER_MODEL`
 
-they can now work in two modes:
+they can now work in three modes:
 
 - `AI_PROVIDER=mock`: local SVG background generation
 - `AI_PROVIDER=openai`: real OpenAI image generation
+- `AI_PROVIDER=openrouter`: real OpenRouter image generation
 
 When `AI_PROVIDER=openai` and `AI_PROVIDER_MODEL` is not explicitly set, the app defaults to `gpt-image-2`.
+
+When `AI_PROVIDER=openrouter` and `AI_PROVIDER_MODEL` is not explicitly set, the app defaults to `google/gemini-3.1-flash-image-preview` (Nano Banana 2).
 
 In other words:
 
 - the pipeline already supported a mock provider,
-- and it can now call a real OpenAI provider for the source background image.
+- and it can now call a real OpenAI or OpenRouter provider for the source background image.
 
 ### 5.2 Card images
 
@@ -431,6 +434,18 @@ Role:
 Relationship:
 
 - only needed for the OpenAI provider path,
+- must stay on the server,
+- has no role in R2 upload authentication.
+
+### `OPENROUTER_API_KEY`
+
+Role:
+
+- authenticates server-side requests to the OpenRouter image generation API when `AI_PROVIDER=openrouter`.
+
+Relationship:
+
+- only needed for the OpenRouter provider path,
 - must stay on the server,
 - has no role in R2 upload authentication.
 

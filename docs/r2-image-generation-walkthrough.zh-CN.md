@@ -119,24 +119,27 @@ cron 路由主要做两件事：
 
 这部分来自 [src/lib/ai.ts](/Users/bytedance/Work/bible-verse/src/lib/ai.ts)。
 
-当前实现并没有真的去调用外部 AI 图片服务，而是根据经文 prompt 生成一张确定性的 SVG 背景。
+当前实现会根据配置，选择“本地确定性 SVG 背景”或“真实外部 AI 图片服务”来生成背景图。
 
 所以当你看到：
 
 - `AI_PROVIDER`
 - `AI_PROVIDER_MODEL`
 
-这些字段时，现在它们可以工作在两种模式下：
+这些字段时，现在它们可以工作在三种模式下：
 
 - `AI_PROVIDER=mock`：走本地 SVG 背景生成
 - `AI_PROVIDER=openai`：走真实 OpenAI 图片生成
+- `AI_PROVIDER=openrouter`：走真实 OpenRouter 图片生成
 
 当 `AI_PROVIDER=openai` 且没有显式设置 `AI_PROVIDER_MODEL` 时，应用会默认使用 `gpt-image-2`。
+
+当 `AI_PROVIDER=openrouter` 且没有显式设置 `AI_PROVIDER_MODEL` 时，应用会默认使用 `google/gemini-3.1-flash-image-preview`，也就是 Nano Banana 2。
 
 换句话说：
 
 - 流程原本就支持 mock provider，
-- 现在也可以为 source 背景图调用真实 OpenAI provider。
+- 现在也可以为 source 背景图调用真实 OpenAI 或 OpenRouter provider。
 
 ### 5.2 Card 图片
 
@@ -447,6 +450,18 @@ Archive 页会用保存下来的 card URL 渲染缩略图。
 关系：
 
 - 只在 OpenAI provider 路径里需要，
+- 必须保留在服务端，
+- 与 R2 上传认证没有直接关系。
+
+### `OPENROUTER_API_KEY`
+
+作用：
+
+- 当 `AI_PROVIDER=openrouter` 时，用于认证服务端发往 OpenRouter 图片生成接口的请求。
+
+关系：
+
+- 只在 OpenRouter provider 路径里需要，
 - 必须保留在服务端，
 - 与 R2 上传认证没有直接关系。
 

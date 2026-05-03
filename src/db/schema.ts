@@ -92,6 +92,7 @@ export const imageGenerations = pgTable(
     sourceImageUrl: text("source_image_url"),
     cardImageSimpleUrl: text("card_image_simple_url"),
     cardImageExtendedUrl: text("card_image_extended_url"),
+    cardImagePortraitUrl: text("card_image_portrait_url"),
     storageProvider: storageProviderEnum("storage_provider")
       .notNull()
       .default("local"),

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8733fd" />
+      <stop offset="55%" stop-color="#2a3f29" />
+      <stop offset="100%" stop-color="#4cbf7f" />
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(8, 15, 26, 0.08)" />
+      <stop offset="100%" stop-color="rgba(8, 15, 26, 0.78)" />
+    </linearGradient>
+    <radialGradient id="glow" cx="70%" cy="18%" r="58%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.26)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#bg)" />
+  <rect width="1080" height="1920" fill="url(#overlay)" />
+  <circle cx="842.4" cy="268.8" r="237.6" fill="url(#glow)" />
+  <circle cx="194.4" cy="1574.3999999999999" r="194.4" fill="rgba(255,255,255,0.07)" />
+  <rect x="74" y="74" width="932" height="1772" rx="42" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
+  <text x="110" y="130" fill="rgba(255,255,255,0.84)" font-size="28" font-family="Arial, sans-serif">TODAY&apos;S VERSE · 9:16</text>
+  <text x="110" y="334" fill="#ffffff" font-size="76" font-family="Georgia, serif">The Lord is my</text><text x="110" y="431" fill="#ffffff" font-size="76" font-family="Georgia, serif">shepherd; I shall</text><text x="110" y="528" fill="#ffffff" font-size="76" font-family="Georgia, serif">not want.</text>
+  <text x="110" y="701" fill="rgba(255,255,255,0.9)" font-size="32" font-family="Arial, sans-serif">A calm reminder that</text><text x="110" y="747" fill="rgba(255,255,255,0.9)" font-size="32" font-family="Arial, sans-serif">God provides what is</text><text x="110" y="793" fill="rgba(255,255,255,0.9)" font-size="32" font-family="Arial, sans-serif">needed, even when the</text><text x="110" y="839" fill="rgba(255,255,255,0.9)" font-size="32" font-family="Arial, sans-serif">path ahead feels</text>
+  <text x="110" y="1758" fill="#ffffff" font-size="42" font-family="Arial, sans-serif">Psalm 23:1</text>
+  <text x="1044" y="1878" text-anchor="end" fill="rgba(255,255,255,0.74)" font-size="22" font-family="Arial, sans-serif">Bible Daily Verse</text>
+</svg>

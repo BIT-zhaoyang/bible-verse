@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Mail, UserRound } from "lucide-react";
+import { BookOpen, Mail, Menu, UserRound } from "lucide-react";
 
 import { appConfig } from "@/lib/config";
 import { cn } from "@/lib/utils";
@@ -20,16 +20,16 @@ type SiteHeaderProps = {
 export function SiteHeader({ currentPath }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-20">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-[rgba(84,60,37,0.12)] bg-[rgba(255,248,241,0.84)] px-4 py-3 shadow-[0_14px_38px_rgba(84,60,37,0.08)] backdrop-blur-md md:px-6">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-[28px] border border-[rgba(84,60,37,0.12)] bg-[rgba(255,248,241,0.88)] px-4 py-3 shadow-[0_14px_38px_rgba(84,60,37,0.08)] backdrop-blur-md md:rounded-full md:px-6">
         <Link href="/" className="flex items-center gap-3 text-[color:var(--olive-ink)]">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(156,104,68,0.12)] text-[color:var(--clay)]">
             <BookOpen className="h-4 w-4" />
           </span>
           <span className="grid gap-0.5">
-            <span className="font-display text-xl font-semibold tracking-tight">
+            <span className="font-display text-lg font-semibold tracking-tight md:text-xl">
               {appConfig.siteName}
             </span>
-            <span className="hidden text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-[color:rgba(107,90,73,0.72)] md:block">
+            <span className="text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-[color:rgba(107,90,73,0.72)] md:text-[0.68rem]">
               Daily encouragement
             </span>
           </span>
@@ -55,12 +55,17 @@ export function SiteHeader({ currentPath }: SiteHeaderProps) {
           })}
         </nav>
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="md:hidden" asChild>
+            <Link href="/archive" aria-label="Open archive">
+              <Menu className="h-4 w-4" />
+            </Link>
+          </Button>
           <Button variant="ghost" size="icon" asChild>
             <Link href="/subscribe" aria-label="Subscribe">
               <Mail className="h-4 w-4" />
             </Link>
           </Button>
-          <Button variant="secondary" size="icon" asChild>
+          <Button variant="secondary" size="icon" className="hidden md:inline-flex" asChild>
             <Link href="/admin/login" aria-label="Admin">
               <UserRound className="h-4 w-4" />
             </Link>

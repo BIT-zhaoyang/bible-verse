@@ -2,7 +2,7 @@ import "server-only";
 
 import { escapeXml, wrapText } from "./text";
 
-type CardVariant = "simple" | "extended";
+type CardVariant = "simple" | "extended" | "portrait";
 
 type CardInput = {
   verseText: string;
@@ -15,7 +15,10 @@ type CardInput = {
 };
 
 function buildTextLines(input: CardInput) {
-  const verseLines = wrapText(input.verseText, 34).slice(0, 6);
+  const verseLines =
+    input.variant === "portrait"
+      ? wrapText(input.verseText, 18).slice(0, 8)
+      : wrapText(input.verseText, 34).slice(0, 6);
   const explanationLines =
     input.variant === "extended"
       ? wrapText(input.explanationText, 48).slice(0, 3)
@@ -27,15 +30,32 @@ function buildTextLines(input: CardInput) {
 export function renderCardSvg(input: CardInput) {
   const { verseLines, explanationLines } = buildTextLines(input);
   const [first, second, third] = input.palette;
-  const verseStartY = 192;
+  const width = input.variant === "portrait" ? 1080 : 1200;
+  const height = input.variant === "portrait" ? 1920 : 630;
+  const frameX = input.variant === "portrait" ? 56 : 64;
+  const frameY = input.variant === "portrait" ? 56 : 64;
+  const frameWidth = input.variant === "portrait" ? 968 : 1072;
+  const frameHeight = input.variant === "portrait" ? 1808 : 502;
+  const verseStartY = input.variant === "portrait" ? 270 : 192;
+  const verseGap = input.variant === "portrait" ? 96 : 60;
+  const verseFontSize = input.variant === "portrait" ? 76 : 50;
+  const labelX = input.variant === "portrait" ? 94 : 96;
+  const labelY = input.variant === "portrait" ? 142 : 122;
+  const labelSize = input.variant === "portrait" ? 26 : 24;
+  const referenceY = input.variant === "portrait" ? 1710 : 530;
+  const referenceSize = input.variant === "portrait" ? 48 : 30;
+  const footerX = input.variant === "portrait" ? 986 : 1104;
+  const footerY = input.variant === "portrait" ? 1848 : 580;
+  const footerSize = input.variant === "portrait" ? 24 : 20;
+  const frameRadius = input.variant === "portrait" ? 40 : 28;
   const backgroundLayer = input.backgroundImageDataUrl
     ? `<image href="${escapeXml(
         input.backgroundImageDataUrl,
-      )}" width="1200" height="630" preserveAspectRatio="xMidYMid slice" />`
-    : `<rect width="1200" height="630" fill="url(#bg)" />`;
+      )}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" />`
+    : `<rect width="${width}" height="${height}" fill="url(#bg)" />`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="${first}" />
@@ -48,13 +68,13 @@ export function renderCardSvg(input: CardInput) {
     </linearGradient>
   </defs>
   ${backgroundLayer}
-  <rect width="1200" height="630" fill="url(#overlay)" />
-  <rect x="64" y="64" width="1072" height="502" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
-  <text x="96" y="122" fill="rgba(255,255,255,0.86)" font-size="24" font-family="Arial, sans-serif">TODAY'S VERSE</text>
+  <rect width="${width}" height="${height}" fill="url(#overlay)" />
+  <rect x="${frameX}" y="${frameY}" width="${frameWidth}" height="${frameHeight}" rx="${frameRadius}" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
+  <text x="${labelX}" y="${labelY}" fill="rgba(255,255,255,0.86)" font-size="${labelSize}" font-family="Arial, sans-serif">TODAY'S VERSE</text>
   ${verseLines
     .map(
       (line, index) =>
-        `<text x="96" y="${verseStartY + index * 60}" fill="#ffffff" font-size="50" font-family="Georgia, serif">${escapeXml(
+        `<text x="${labelX}" y="${verseStartY + index * verseGap}" fill="#ffffff" font-size="${verseFontSize}" font-family="Georgia, serif">${escapeXml(
           line,
         )}</text>`,
     )
@@ -64,17 +84,17 @@ export function renderCardSvg(input: CardInput) {
       ? explanationLines
           .map(
             (line, index) =>
-              `<text x="96" y="${444 + index * 30}" fill="rgba(255,255,255,0.88)" font-size="24" font-family="Arial, sans-serif">${escapeXml(
+              `<text x="${labelX}" y="${444 + index * 30}" fill="rgba(255,255,255,0.88)" font-size="24" font-family="Arial, sans-serif">${escapeXml(
                 line,
               )}</text>`,
           )
           .join("")
       : ""
   }
-  <text x="96" y="530" fill="#ffffff" font-size="30" font-family="Arial, sans-serif">${escapeXml(
+  <text x="${labelX}" y="${referenceY}" fill="#ffffff" font-size="${referenceSize}" font-family="Arial, sans-serif">${escapeXml(
     input.referenceText,
   )}</text>
-  <text x="1104" y="580" text-anchor="end" fill="rgba(255,255,255,0.72)" font-size="20" font-family="Arial, sans-serif">${escapeXml(
+  <text x="${footerX}" y="${footerY}" text-anchor="end" fill="rgba(255,255,255,0.72)" font-size="${footerSize}" font-family="Arial, sans-serif">${escapeXml(
     input.siteName,
   )}</text>
 </svg>`;

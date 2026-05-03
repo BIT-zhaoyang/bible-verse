@@ -1,7 +1,17 @@
+export function getDefaultAiProviderModel(provider: string) {
+  if (provider === "openai") {
+    return "gpt-image-2";
+  }
+
+  if (provider === "openrouter") {
+    return "google/gemini-3.1-flash-image-preview";
+  }
+
+  return "mock-gradient-v1";
+}
+
 const aiProvider = process.env.AI_PROVIDER ?? "mock";
-const aiProviderModel =
-  process.env.AI_PROVIDER_MODEL ??
-  (aiProvider === "openai" ? "gpt-image-2" : "mock-gradient-v1");
+const aiProviderModel = process.env.AI_PROVIDER_MODEL ?? getDefaultAiProviderModel(aiProvider);
 
 export const appConfig = {
   siteName: "Bible Daily Verse",

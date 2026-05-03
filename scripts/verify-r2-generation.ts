@@ -66,9 +66,12 @@ async function main() {
     );
   }
 
-  const [{ db }, { imageGenerations }] = (
-    await Promise.all([import("@/db"), import("@/db/schema")])
-  ).map(unwrapModule);
+  const [dbModule, schemaModule] = await Promise.all([
+    import("@/db"),
+    import("@/db/schema"),
+  ]);
+  const { db } = unwrapModule(dbModule);
+  const { imageGenerations } = unwrapModule(schemaModule);
 
   const [stored] = await db
     .select({
@@ -79,6 +82,7 @@ async function main() {
       sourceImageUrl: imageGenerations.sourceImageUrl,
       cardImageSimpleUrl: imageGenerations.cardImageSimpleUrl,
       cardImageExtendedUrl: imageGenerations.cardImageExtendedUrl,
+      cardImagePortraitUrl: imageGenerations.cardImagePortraitUrl,
     })
     .from(imageGenerations)
     .where(eq(imageGenerations.targetDate, targetDate))
@@ -100,10 +104,12 @@ async function main() {
         sourceImageUrl: stored.sourceImageUrl,
         cardImageSimpleUrl: stored.cardImageSimpleUrl,
         cardImageExtendedUrl: stored.cardImageExtendedUrl,
+        cardImagePortraitUrl: stored.cardImagePortraitUrl,
         publicUrls: [
           stored.sourceImageUrl,
           stored.cardImageSimpleUrl,
           stored.cardImageExtendedUrl,
+          stored.cardImagePortraitUrl,
         ].filter((url): url is string => Boolean(url)),
       },
       null,

@@ -177,6 +177,7 @@ async function seedPublishedToday() {
 
   const simpleFileName = "simple.svg";
   const extendedFileName = "extended.svg";
+  const portraitFileName = "portrait.svg";
   await writeFile(
     path.join(outputDir, simpleFileName),
     createSeedCardSvg(firstVerse.referenceText, firstVerse.verseText),
@@ -185,10 +186,15 @@ async function seedPublishedToday() {
     path.join(outputDir, extendedFileName),
     createSeedCardSvg(firstVerse.referenceText, firstVerse.explanationText),
   );
+  await writeFile(
+    path.join(outputDir, portraitFileName),
+    createSeedCardSvg(firstVerse.referenceText, firstVerse.verseText),
+  );
 
   const baseUrl = process.env.PUBLIC_SITE_URL ?? "http://localhost:3000";
   const simpleUrl = `${baseUrl}/generated/seed/${today}/${simpleFileName}`;
   const extendedUrl = `${baseUrl}/generated/seed/${today}/${extendedFileName}`;
+  const portraitUrl = `${baseUrl}/generated/seed/${today}/${portraitFileName}`;
 
   const [generation] = await db
     .insert(imageGenerations)
@@ -201,6 +207,7 @@ async function seedPublishedToday() {
       sourceImageUrl: simpleUrl,
       cardImageSimpleUrl: simpleUrl,
       cardImageExtendedUrl: extendedUrl,
+      cardImagePortraitUrl: portraitUrl,
       storageProvider: "local",
       status: "approved",
       triggerType: "cron",

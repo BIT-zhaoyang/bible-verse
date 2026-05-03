@@ -23,8 +23,10 @@ export type PublicPublication = {
   referenceText: string;
   verseText: string;
   explanationText: string;
+  sourceImageUrl: string | null;
   cardImageSimpleUrl: string | null;
   cardImageExtendedUrl: string | null;
+  cardImagePortraitUrl: string | null;
 };
 
 function deterministicIndex(seed: string, size: number) {
@@ -45,8 +47,10 @@ async function fetchPublicationByDate(publishDate: string) {
       referenceText: verses.referenceText,
       verseText: verses.verseText,
       explanationText: verses.explanationText,
+      sourceImageUrl: imageGenerations.sourceImageUrl,
       cardImageSimpleUrl: imageGenerations.cardImageSimpleUrl,
       cardImageExtendedUrl: imageGenerations.cardImageExtendedUrl,
+      cardImagePortraitUrl: imageGenerations.cardImagePortraitUrl,
     })
     .from(dailyPublications)
     .innerJoin(verses, eq(verses.id, dailyPublications.verseId))
@@ -93,8 +97,10 @@ export async function getArchivePublications() {
       referenceText: verses.referenceText,
       verseText: verses.verseText,
       explanationText: verses.explanationText,
+      sourceImageUrl: imageGenerations.sourceImageUrl,
       cardImageSimpleUrl: imageGenerations.cardImageSimpleUrl,
       cardImageExtendedUrl: imageGenerations.cardImageExtendedUrl,
+      cardImagePortraitUrl: imageGenerations.cardImagePortraitUrl,
     })
     .from(dailyPublications)
     .innerJoin(verses, eq(verses.id, dailyPublications.verseId))
@@ -124,8 +130,10 @@ export async function getPublicationBySlug(slug: string) {
       referenceText: verses.referenceText,
       verseText: verses.verseText,
       explanationText: verses.explanationText,
+      sourceImageUrl: imageGenerations.sourceImageUrl,
       cardImageSimpleUrl: imageGenerations.cardImageSimpleUrl,
       cardImageExtendedUrl: imageGenerations.cardImageExtendedUrl,
+      cardImagePortraitUrl: imageGenerations.cardImagePortraitUrl,
     })
     .from(dailyPublications)
     .innerJoin(verses, eq(verses.id, dailyPublications.verseId))
@@ -186,6 +194,7 @@ export async function getAdminOverview() {
       generationVersion: imageGenerations.generationVersion,
       referenceText: verses.referenceText,
       simpleUrl: imageGenerations.cardImageSimpleUrl,
+      portraitUrl: imageGenerations.cardImagePortraitUrl,
     })
     .from(imageGenerations)
     .innerJoin(verses, eq(verses.id, imageGenerations.verseId))
@@ -210,6 +219,7 @@ export async function getReviewData(targetDate: string) {
       sourceImageUrl: imageGenerations.sourceImageUrl,
       cardImageSimpleUrl: imageGenerations.cardImageSimpleUrl,
       cardImageExtendedUrl: imageGenerations.cardImageExtendedUrl,
+      cardImagePortraitUrl: imageGenerations.cardImagePortraitUrl,
       createdAt: imageGenerations.createdAt,
       referenceText: verses.referenceText,
       verseText: verses.verseText,
@@ -326,8 +336,9 @@ export async function generateCandidateForDate(
     const sourceKey = `sources/${targetDate}/generation-${generationVersion}.${background.extension}`;
     const simpleKey = `cards/${targetDate}/generation-${generationVersion}-simple.svg`;
     const extendedKey = `cards/${targetDate}/generation-${generationVersion}-extended.svg`;
+    const portraitKey = `cards/${targetDate}/generation-${generationVersion}-portrait.svg`;
 
-    const [sourceUpload, simpleUpload, extendedUpload] = await Promise.all([
+    const [sourceUpload, simpleUpload, extendedUpload, portraitUpload] = await Promise.all([
       uploadAsset({
         key: sourceKey,
         body: background.buffer,
@@ -359,6 +370,19 @@ export async function generateCandidateForDate(
         }),
         contentType: "image/svg+xml",
       }),
+      uploadAsset({
+        key: portraitKey,
+        body: renderCardSvg({
+          verseText: verse.verseText,
+          explanationText: verse.explanationText,
+          referenceText: verse.referenceText,
+          siteName: appConfig.siteName,
+          palette,
+          variant: "portrait",
+          backgroundImageDataUrl: background.dataUrl,
+        }),
+        contentType: "image/svg+xml",
+      }),
     ]);
 
     const [updated] = await db
@@ -367,6 +391,7 @@ export async function generateCandidateForDate(
         sourceImageUrl: sourceUpload.url,
         cardImageSimpleUrl: simpleUpload.url,
         cardImageExtendedUrl: extendedUpload.url,
+        cardImagePortraitUrl: portraitUpload.url,
         storageProvider: sourceUpload.provider,
         status: "review_required",
         errorMessage: null,

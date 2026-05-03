@@ -58,8 +58,9 @@ Core app configuration in `.env.example`:
 - `PUBLIC_SITE_URL`: base URL used when building share and metadata links.
 - `DEFAULT_TIMEZONE`: default publication timezone.
 - `CRON_SECRET`: bearer token expected by `src/app/api/cron/generate-next/route.ts`.
-- `AI_PROVIDER` and `AI_PROVIDER_MODEL`: control which background-image provider runs in `src/lib/ai.ts`. `mock` keeps the local SVG fallback; `openai` uses the OpenAI Images API, with `gpt-image-2` as the default model when `AI_PROVIDER_MODEL` is not explicitly set.
+- `AI_PROVIDER` and `AI_PROVIDER_MODEL`: control which background-image provider runs in `src/lib/ai.ts`. `mock` keeps the local SVG fallback; `openai` uses the OpenAI Images API, with `gpt-image-2` as the default model when `AI_PROVIDER_MODEL` is not explicitly set; `openrouter` uses OpenRouter chat completions image generation, with `google/gemini-3.1-flash-image-preview` (Nano Banana 2) as the default model when `AI_PROVIDER_MODEL` is not explicitly set.
 - `OPENAI_API_KEY`: required when `AI_PROVIDER=openai`.
+- `OPENROUTER_API_KEY`: required when `AI_PROVIDER=openrouter`.
 
 R2 storage variables:
 
@@ -121,3 +122,7 @@ Fallback behavior is split in two ways:
 - Missing only `R2_PUBLIC_BASE_URL` still uploads to R2, but the app stores the derived bucket/account URL instead of your intended public host.
 
 For a concise storage walkthrough, see [docs/r2-storage-flow.md](/Users/bytedance/Work/bible-verse/docs/r2-storage-flow.md).
+
+## Next work
+
+The current implementation focus and deferred backlog live in [docs/todo.md](/Users/bytedance/Work/bible-verse/docs/todo.md).
