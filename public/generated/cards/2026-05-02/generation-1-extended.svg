@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e7837a" />
+      <stop offset="50%" stop-color="#ac8f65" />
+      <stop offset="100%" stop-color="#82de81" />
+    </linearGradient>
+    <linearGradient id="overlay" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(8, 15, 26, 0.12)" />
+      <stop offset="100%" stop-color="rgba(8, 15, 26, 0.72)" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#overlay)" />
+  <rect x="64" y="64" width="1072" height="502" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
+  <text x="96" y="122" fill="rgba(255,255,255,0.86)" font-size="24" font-family="Arial, sans-serif">TODAY'S VERSE</text>
+  <text x="96" y="192" fill="#ffffff" font-size="50" font-family="Georgia, serif">And we know that all things work</text><text x="96" y="252" fill="#ffffff" font-size="50" font-family="Georgia, serif">together for good to them that</text><text x="96" y="312" fill="#ffffff" font-size="50" font-family="Georgia, serif">love God.</text>
+  <text x="96" y="444" fill="rgba(255,255,255,0.88)" font-size="24" font-family="Arial, sans-serif">Even when the full picture is unclear, God is</text><text x="96" y="474" fill="rgba(255,255,255,0.88)" font-size="24" font-family="Arial, sans-serif">still at work. His goodness can reach into</text><text x="96" y="504" fill="rgba(255,255,255,0.88)" font-size="24" font-family="Arial, sans-serif">places that feel unfinished.</text>
+  <text x="96" y="530" fill="#ffffff" font-size="30" font-family="Arial, sans-serif">Romans 8:28</text>
+  <text x="1104" y="580" text-anchor="end" fill="rgba(255,255,255,0.72)" font-size="20" font-family="Arial, sans-serif">Bible Daily Verse</text>
+</svg>

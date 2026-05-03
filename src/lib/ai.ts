@@ -5,11 +5,15 @@ import { createHash } from "crypto";
 import { appConfig } from "./config";
 import { escapeXml, wrapText } from "./text";
 
+type GeneratedBackgroundExtension = "svg" | "png" | "jpeg" | "webp";
+
 export type GeneratedBackground = {
   provider: string;
   model: string;
   buffer: Buffer;
-  extension: "svg";
+  extension: GeneratedBackgroundExtension;
+  mediaType: string;
+  dataUrl: string;
 };
 
 export function getPromptPalette(prompt: string): [string, string, string] {
@@ -21,7 +25,18 @@ export function getPromptPalette(prompt: string): [string, string, string] {
   ];
 }
 
-export async function generateBackground(prompt: string): Promise<GeneratedBackground> {
+type BackgroundProviderConfig = {
+  provider: string;
+  model: string;
+  siteName: string;
+  openAiApiKey?: string;
+};
+
+function toDataUrl(mediaType: string, buffer: Buffer) {
+  return `data:${mediaType};base64,${buffer.toString("base64")}`;
+}
+
+function createMockBackground(config: BackgroundProviderConfig, prompt: string): GeneratedBackground {
   const [first, second, third] = getPromptPalette(prompt);
   const lines = wrapText(prompt, 42).slice(0, 3);
 
@@ -52,14 +67,101 @@ export async function generateBackground(prompt: string): Promise<GeneratedBackg
     )
     .join("")}
   <text x="90" y="578" fill="rgba(255,255,255,0.80)" font-size="24" font-family="Arial, sans-serif">${escapeXml(
-    appConfig.siteName,
+    config.siteName,
   )}</text>
 </svg>`;
 
+  const buffer = Buffer.from(svg);
+
   return {
-    provider: appConfig.aiProvider,
-    model: appConfig.aiProviderModel,
-    buffer: Buffer.from(svg),
+    provider: config.provider,
+    model: config.model,
+    buffer,
     extension: "svg",
+    mediaType: "image/svg+xml",
+    dataUrl: toDataUrl("image/svg+xml", buffer),
   };
+}
+
+async function createOpenAiBackground(
+  config: BackgroundProviderConfig,
+  prompt: string,
+  fetchImpl: typeof fetch,
+): Promise<GeneratedBackground> {
+  if (!config.openAiApiKey) {
+    throw new Error("OPENAI_API_KEY is required when AI_PROVIDER is set to openai.");
+  }
+
+  const response = await fetchImpl("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.openAiApiKey}`,
+    },
+    body: JSON.stringify({
+      model: config.model,
+      prompt,
+      size: "1536x1024",
+      quality: "medium",
+      output_format: "png",
+    }),
+  });
+
+  if (!response.ok) {
+    const message = (await response.text()).trim();
+    throw new Error(
+      `OpenAI image generation failed (${response.status}): ${message || "No response body."}`,
+    );
+  }
+
+  const payload = (await response.json()) as {
+    data?: Array<{
+      b64_json?: string;
+    }>;
+  };
+
+  const b64Json = payload.data?.[0]?.b64_json;
+
+  if (!b64Json) {
+    throw new Error("OpenAI image generation response did not include image data.");
+  }
+
+  const buffer = Buffer.from(b64Json, "base64");
+
+  return {
+    provider: config.provider,
+    model: config.model,
+    buffer,
+    extension: "png",
+    mediaType: "image/png",
+    dataUrl: toDataUrl("image/png", buffer),
+  };
+}
+
+export async function generateBackgroundForProvider(
+  config: BackgroundProviderConfig,
+  prompt: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<GeneratedBackground> {
+  if (config.provider === "mock") {
+    return createMockBackground(config, prompt);
+  }
+
+  if (config.provider === "openai") {
+    return createOpenAiBackground(config, prompt, fetchImpl);
+  }
+
+  throw new Error(`Unsupported AI provider: ${config.provider}`);
+}
+
+export async function generateBackground(prompt: string): Promise<GeneratedBackground> {
+  return generateBackgroundForProvider(
+    {
+      provider: appConfig.aiProvider,
+      model: appConfig.aiProviderModel,
+      siteName: appConfig.siteName,
+      openAiApiKey: process.env.OPENAI_API_KEY,
+    },
+    prompt,
+  );
 }

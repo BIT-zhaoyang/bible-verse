@@ -11,6 +11,7 @@ type CardInput = {
   siteName: string;
   palette: [string, string, string];
   variant: CardVariant;
+  backgroundImageDataUrl?: string;
 };
 
 function buildTextLines(input: CardInput) {
@@ -27,6 +28,11 @@ export function renderCardSvg(input: CardInput) {
   const { verseLines, explanationLines } = buildTextLines(input);
   const [first, second, third] = input.palette;
   const verseStartY = 192;
+  const backgroundLayer = input.backgroundImageDataUrl
+    ? `<image href="${escapeXml(
+        input.backgroundImageDataUrl,
+      )}" width="1200" height="630" preserveAspectRatio="xMidYMid slice" />`
+    : `<rect width="1200" height="630" fill="url(#bg)" />`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
@@ -41,7 +47,7 @@ export function renderCardSvg(input: CardInput) {
       <stop offset="100%" stop-color="rgba(8, 15, 26, 0.72)" />
     </linearGradient>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)" />
+  ${backgroundLayer}
   <rect width="1200" height="630" fill="url(#overlay)" />
   <rect x="64" y="64" width="1072" height="502" rx="28" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.18)" />
   <text x="96" y="122" fill="rgba(255,255,255,0.86)" font-size="24" font-family="Arial, sans-serif">TODAY'S VERSE</text>

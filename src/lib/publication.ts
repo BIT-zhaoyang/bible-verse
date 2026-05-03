@@ -331,7 +331,7 @@ export async function generateCandidateForDate(
       uploadAsset({
         key: sourceKey,
         body: background.buffer,
-        contentType: "image/svg+xml",
+        contentType: background.mediaType,
       }),
       uploadAsset({
         key: simpleKey,
@@ -342,6 +342,7 @@ export async function generateCandidateForDate(
           siteName: appConfig.siteName,
           palette,
           variant: "simple",
+          backgroundImageDataUrl: background.dataUrl,
         }),
         contentType: "image/svg+xml",
       }),
@@ -354,6 +355,7 @@ export async function generateCandidateForDate(
           siteName: appConfig.siteName,
           palette,
           variant: "extended",
+          backgroundImageDataUrl: background.dataUrl,
         }),
         contentType: "image/svg+xml",
       }),
