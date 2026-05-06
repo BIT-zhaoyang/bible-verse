@@ -3,7 +3,6 @@ import "server-only";
 import { createHash } from "crypto";
 
 import { appConfig } from "./config";
-import { escapeXml, wrapText } from "./text";
 
 type GeneratedBackgroundExtension = "svg" | "png" | "jpeg" | "webp";
 
@@ -15,6 +14,31 @@ export type GeneratedBackground = {
   mediaType: string;
   dataUrl: string;
 };
+
+export type VerseImagePromptInput = {
+  siteName: string;
+  referenceText: string;
+  verseText: string;
+  explanationText: string;
+  promptText: string;
+};
+
+export function buildVerseImagePrompt(input: VerseImagePromptInput) {
+  return [
+    `Create one final image for ${input.siteName}.`,
+    "Aspect ratio: 9:16 vertical portrait, mobile-first devotional artwork.",
+    `Verse reference: ${input.referenceText}`,
+    `Verse text: "${input.verseText}"`,
+    `Short meaning: ${input.explanationText}`,
+    `Visual direction: ${input.promptText}`,
+    "Include readable scripture text in the image using the exact verse text above, and display the exact verse reference below it.",
+    "Use elegant, high-contrast typography that remains legible on a mobile screen, with calm spacing and a devotional editorial layout.",
+    "Keep generous safe margins on all sides. The verse text and reference must fit entirely inside the image without cropping, truncation, or text running off the edges.",
+    "The image should feel reverent, calm, hopeful, and suitable for a daily Bible verse website and image sharing.",
+    "Do not include logos, watermarks, UI controls, buttons, frames, phone mockups, website chrome, or extra captions beyond the verse text and reference.",
+    "Return one final image only.",
+  ].join("\n");
+}
 
 export function getPromptPalette(prompt: string): [string, string, string] {
   const digest = createHash("sha256").update(prompt).digest("hex");
@@ -39,10 +63,9 @@ function toDataUrl(mediaType: string, buffer: Buffer) {
 
 function createMockBackground(config: BackgroundProviderConfig, prompt: string): GeneratedBackground {
   const [first, second, third] = getPromptPalette(prompt);
-  const lines = wrapText(prompt, 42).slice(0, 3);
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="${first}" />
@@ -53,23 +76,19 @@ function createMockBackground(config: BackgroundProviderConfig, prompt: string):
       <stop offset="0%" stop-color="rgba(10, 10, 10, 0.10)" />
       <stop offset="100%" stop-color="rgba(10, 10, 10, 0.55)" />
     </linearGradient>
+    <radialGradient id="glow" cx="62%" cy="18%" r="58%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.34)" />
+      <stop offset="62%" stop-color="rgba(255,255,255,0.08)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </radialGradient>
   </defs>
-  <rect width="1200" height="630" fill="url(#bg)" />
-  <rect width="1200" height="630" fill="url(#shade)" />
-  <circle cx="960" cy="120" r="180" fill="rgba(255,255,255,0.09)" />
-  <circle cx="180" cy="520" r="210" fill="rgba(255,255,255,0.06)" />
-  <text x="90" y="108" fill="rgba(255,255,255,0.78)" font-size="26" font-family="Georgia, serif">Generated background preview</text>
-  ${lines
-    .map(
-      (line, index) =>
-        `<text x="90" y="${170 + index * 38}" fill="rgba(255,255,255,0.72)" font-size="28" font-family="Georgia, serif">${escapeXml(
-          line,
-        )}</text>`,
-    )
-    .join("")}
-  <text x="90" y="578" fill="rgba(255,255,255,0.80)" font-size="24" font-family="Arial, sans-serif">${escapeXml(
-    config.siteName,
-  )}</text>
+  <rect width="1080" height="1920" fill="url(#bg)" />
+  <rect width="1080" height="1920" fill="url(#glow)" />
+  <rect width="1080" height="1920" fill="url(#shade)" />
+  <circle cx="840" cy="260" r="210" fill="rgba(255,255,255,0.10)" />
+  <circle cx="220" cy="1530" r="280" fill="rgba(255,255,255,0.07)" />
+  <path d="M0 1340 C210 1180 330 1260 500 1135 C690 995 850 1040 1080 880 L1080 1920 L0 1920 Z" fill="rgba(15,39,66,0.40)" />
+  <path d="M0 1510 C260 1340 410 1450 620 1300 C780 1185 920 1205 1080 1095 L1080 1920 L0 1920 Z" fill="rgba(5,10,18,0.36)" />
 </svg>`;
 
   const buffer = Buffer.from(svg);
@@ -102,7 +121,7 @@ async function createOpenAiBackground(
     body: JSON.stringify({
       model: config.model,
       prompt,
-      size: "1536x1024",
+      size: "1024x1536",
       quality: "medium",
       output_format: "png",
     }),
@@ -181,6 +200,9 @@ async function createOpenRouterBackground(
       content: string;
     }>;
     modalities: string[];
+    image_config: {
+      aspect_ratio: "9:16";
+    };
     stream: boolean;
     max_tokens: number;
   } = {
@@ -192,6 +214,9 @@ async function createOpenRouterBackground(
       },
     ],
     modalities: ["image", "text"],
+    image_config: {
+      aspect_ratio: "9:16",
+    },
     stream: false,
     max_tokens: 256,
   };
@@ -240,7 +265,7 @@ async function createOpenRouterBackground(
     return firstImage?.image_url?.url ?? firstImage?.imageUrl?.url ?? null;
   }
 
-  const retryPrompt = `${prompt}\n\nGenerate a single reverent background image only. Do not call tools. Return image output.`;
+  const retryPrompt = `${prompt}\n\nGenerate a single final 9:16 vertical devotional image only. Include the exact verse text and verse reference as legible typography. Do not include logos, watermarks, buttons, or UI chrome. Do not call tools. Return image output.`;
   const imageDataUrl = (await requestImage(prompt)) ?? (await requestImage(retryPrompt));
 
   if (!imageDataUrl) {

@@ -4,14 +4,11 @@ import {
   CheckCircle2,
   ChevronRight,
   Globe2,
-  Heart,
   Lightbulb,
   Lock,
   LogOut,
   Mail,
-  MoreHorizontal,
   Search,
-  Send,
   Share2,
   SlidersHorizontal,
   UserRound,
@@ -102,8 +99,6 @@ export function VerseDetailScreen({ data }: { data: VerseDetailScreenViewModel }
             for Your peace that calms my heart and mind. Amen.
           </p>
         </section>
-        <SharePanel />
-        <MeaningfulPanel />
       </main>
     </DailyAppShell>
   );
@@ -312,51 +307,6 @@ function RecentVersesSection({ verses }: { verses: HomeScreenViewModel["recent"]
         {verses.map((verse) => (
           <VerseThumb key={`${verse.publishDate}-${verse.slug}`} verse={verse} compact />
         ))}
-      </div>
-    </section>
-  );
-}
-
-function SharePanel() {
-  const items = [
-    { label: "Facebook", icon: Send, color: "bg-[#1877f2]" },
-    { label: "WhatsApp", icon: Send, color: "bg-[#25d366]" },
-    { label: "Twitter", icon: Send, color: "bg-[#55acee]" },
-    { label: "More", icon: MoreHorizontal, color: "bg-[#f3f4f6] text-[#111827]" },
-  ];
-
-  return (
-    <section className="mx-5 mt-8 rounded-md border border-black/10 bg-white p-5">
-      <h2 className="font-display text-lg font-bold">Share with Others</h2>
-      <div className="mt-5 grid grid-cols-4 gap-3">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <button key={item.label} className="grid justify-items-center gap-2 text-xs">
-              <span className={`flex h-11 w-11 items-center justify-center rounded-full text-white ${item.color}`}>
-                <Icon className="h-5 w-5" />
-              </span>
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function MeaningfulPanel() {
-  return (
-    <section className="mx-5 mt-6 rounded-md bg-[#efe3d3] p-4">
-      <div className="flex items-center gap-3">
-        <Heart className="h-9 w-9 fill-[#c39a62] text-[#c39a62]" />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold">Was this verse meaningful to you?</p>
-          <p className="mt-1 text-xs text-[#4b5563]">Let us know and encourage others!</p>
-        </div>
-        <button className="h-10 rounded-md border border-black/20 bg-white px-4 text-sm font-semibold">
-          Like
-        </button>
       </div>
     </section>
   );

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { renderCardSvg } from "../lib/cards";
-import { generateBackgroundForProvider } from "../lib/ai";
+import { buildVerseImagePrompt, generateBackgroundForProvider } from "../lib/ai";
 import { getDefaultAiProviderModel } from "../lib/config";
 
 test("renderCardSvg embeds the provided background image data URL", () => {
@@ -69,12 +69,34 @@ test("generateBackgroundForProvider returns png bytes for the openai provider", 
 
   assert.equal(fetchCalls.length, 1);
   assert.equal(fetchCalls[0]?.url, "https://api.openai.com/v1/images/generations");
+  const requestBody = JSON.parse(String(fetchCalls[0]?.init?.body ?? "{}"));
+  assert.equal(requestBody.size, "1024x1536");
   assert.equal(background.provider, "openai");
   assert.equal(background.model, "gpt-image-2");
   assert.equal(background.extension, "png");
   assert.equal(background.mediaType, "image/png");
   assert.equal(background.buffer.toString("utf8"), "png-image-bytes");
   assert.match(background.dataUrl, /^data:image\/png;base64,/);
+});
+
+test("buildVerseImagePrompt asks the provider for a final 9:16 verse image with typography", () => {
+  const prompt = buildVerseImagePrompt({
+    siteName: "Bible Daily Verse",
+    referenceText: "Matthew 11:28",
+    verseText: "Come unto me, all ye that labour and are heavy laden, and I will give you rest.",
+    explanationText: "Jesus invites the weary to bring their burdens honestly.",
+    promptText: "A quiet lake at sunrise with a resting place by the water.",
+  });
+
+  assert.match(prompt, /Matthew 11:28/);
+  assert.match(prompt, /Come unto me/);
+  assert.match(prompt, /9:16/);
+  assert.match(prompt, /Include readable scripture text/i);
+  assert.match(prompt, /display the exact verse reference/i);
+  assert.match(prompt, /safe margins/i);
+  assert.match(prompt, /must fit entirely/i);
+  assert.doesNotMatch(prompt, /Do not include readable text/i);
+  assert.match(prompt, /final image/i);
 });
 
 test("generateBackgroundForProvider returns png bytes for the openrouter provider", async () => {
@@ -126,7 +148,7 @@ test("generateBackgroundForProvider returns png bytes for the openrouter provide
   const requestBody = JSON.parse(String(fetchCalls[0]?.init?.body ?? "{}"));
   assert.equal(requestBody.max_tokens, 256);
   assert.deepEqual(requestBody.modalities, ["image", "text"]);
-  assert.equal(requestBody.image_config, undefined);
+  assert.deepEqual(requestBody.image_config, { aspect_ratio: "9:16" });
   assert.equal(background.provider, "openrouter");
   assert.equal(background.model, "google/gemini-3.1-flash-image-preview");
   assert.equal(background.extension, "png");

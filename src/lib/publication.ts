@@ -1,7 +1,7 @@
 import "server-only";
 
-import { cacheLife, cacheTag } from "next/cache";
-import { and, asc, desc, eq, gte, inArray, lte, max, sql } from "drizzle-orm";
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
+import { and, asc, desc, eq, getTableColumns, gte, inArray, lte, max, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -11,8 +11,7 @@ import {
   verses,
 } from "@/db/schema";
 
-import { generateBackground, getPromptPalette } from "./ai";
-import { renderCardSvg } from "./cards";
+import { buildVerseImagePrompt, generateBackground } from "./ai";
 import { appConfig } from "./config";
 import { uploadAsset } from "./storage";
 import { getRecentReuseWindowStart, getTodayDateKey, isPastOrToday } from "./time";
@@ -153,6 +152,20 @@ export async function getPublicationBySlug(slug: string) {
   return row ?? null;
 }
 
+function revalidatePublicationCaches(publishDate: string, slug: string) {
+  for (const tag of [
+    `publication:${publishDate}`,
+    `publication:slug:${slug}`,
+    "publications:archive",
+  ]) {
+    try {
+      revalidateTag(tag, { expire: 0 });
+    } catch {
+      // Approval can also run from local scripts, outside a Next.js request context.
+    }
+  }
+}
+
 export async function getContentAdminList() {
   const rows = await db
     .select({
@@ -270,6 +283,37 @@ async function selectCandidateVerse(targetDate: string) {
   return eligible[deterministicIndex(targetDate, eligible.length)];
 }
 
+async function selectPublishedVerseForDate(targetDate: string) {
+  const [row] = await db
+    .select(getTableColumns(verses))
+    .from(dailyPublications)
+    .innerJoin(verses, eq(verses.id, dailyPublications.verseId))
+    .where(
+      and(
+        eq(dailyPublications.publishDate, targetDate),
+        inArray(dailyPublications.status, ["approved", "published"]),
+      ),
+    )
+    .limit(1);
+
+  return row ?? null;
+}
+
+async function selectVerseForGeneration(
+  targetDate: string,
+  triggerType: "cron" | "manual_regenerate",
+) {
+  if (triggerType === "manual_regenerate") {
+    const publishedVerse = await selectPublishedVerseForDate(targetDate);
+
+    if (publishedVerse) {
+      return publishedVerse;
+    }
+  }
+
+  return selectCandidateVerse(targetDate);
+}
+
 async function getNextGenerationVersion(targetDate: string) {
   const [row] = await db
     .select({ maxVersion: max(imageGenerations.generationVersion) })
@@ -308,8 +352,15 @@ export async function generateCandidateForDate(
     }
   }
 
-  const verse = await selectCandidateVerse(targetDate);
+  const verse = await selectVerseForGeneration(targetDate, triggerType);
   const generationVersion = await getNextGenerationVersion(targetDate);
+  const imagePrompt = buildVerseImagePrompt({
+    siteName: appConfig.siteName,
+    referenceText: verse.referenceText,
+    verseText: verse.verseText,
+    explanationText: verse.explanationText,
+    promptText: verse.promptText,
+  });
 
   const [generation] = await db
     .insert(imageGenerations)
@@ -318,7 +369,7 @@ export async function generateCandidateForDate(
       targetDate,
       provider: appConfig.aiProvider,
       providerModel: appConfig.aiProviderModel,
-      promptSnapshot: verse.promptText,
+      promptSnapshot: imagePrompt,
       triggerType,
       generationVersion,
       status: "pending",
@@ -331,68 +382,22 @@ export async function generateCandidateForDate(
       .set({ status: "processing", updatedAt: new Date() })
       .where(eq(imageGenerations.id, generation.id));
 
-    const background = await generateBackground(verse.promptText);
-    const palette = getPromptPalette(verse.promptText);
-    const sourceKey = `sources/${targetDate}/generation-${generationVersion}.${background.extension}`;
-    const simpleKey = `cards/${targetDate}/generation-${generationVersion}-simple.svg`;
-    const extendedKey = `cards/${targetDate}/generation-${generationVersion}-extended.svg`;
-    const portraitKey = `cards/${targetDate}/generation-${generationVersion}-portrait.svg`;
-
-    const [sourceUpload, simpleUpload, extendedUpload, portraitUpload] = await Promise.all([
-      uploadAsset({
-        key: sourceKey,
-        body: background.buffer,
-        contentType: background.mediaType,
-      }),
-      uploadAsset({
-        key: simpleKey,
-        body: renderCardSvg({
-          verseText: verse.verseText,
-          explanationText: verse.explanationText,
-          referenceText: verse.referenceText,
-          siteName: appConfig.siteName,
-          palette,
-          variant: "simple",
-          backgroundImageDataUrl: background.dataUrl,
-        }),
-        contentType: "image/svg+xml",
-      }),
-      uploadAsset({
-        key: extendedKey,
-        body: renderCardSvg({
-          verseText: verse.verseText,
-          explanationText: verse.explanationText,
-          referenceText: verse.referenceText,
-          siteName: appConfig.siteName,
-          palette,
-          variant: "extended",
-          backgroundImageDataUrl: background.dataUrl,
-        }),
-        contentType: "image/svg+xml",
-      }),
-      uploadAsset({
-        key: portraitKey,
-        body: renderCardSvg({
-          verseText: verse.verseText,
-          explanationText: verse.explanationText,
-          referenceText: verse.referenceText,
-          siteName: appConfig.siteName,
-          palette,
-          variant: "portrait",
-          backgroundImageDataUrl: background.dataUrl,
-        }),
-        contentType: "image/svg+xml",
-      }),
-    ]);
+    const image = await generateBackground(imagePrompt);
+    const imageKey = `cards/${targetDate}/generation-${generationVersion}-ai.${image.extension}`;
+    const imageUpload = await uploadAsset({
+      key: imageKey,
+      body: image.buffer,
+      contentType: image.mediaType,
+    });
 
     const [updated] = await db
       .update(imageGenerations)
       .set({
-        sourceImageUrl: sourceUpload.url,
-        cardImageSimpleUrl: simpleUpload.url,
-        cardImageExtendedUrl: extendedUpload.url,
-        cardImagePortraitUrl: portraitUpload.url,
-        storageProvider: sourceUpload.provider,
+        sourceImageUrl: imageUpload.url,
+        cardImageSimpleUrl: imageUpload.url,
+        cardImageExtendedUrl: imageUpload.url,
+        cardImagePortraitUrl: imageUpload.url,
+        storageProvider: imageUpload.provider,
         status: "review_required",
         errorMessage: null,
         updatedAt: new Date(),
@@ -423,8 +428,10 @@ export async function approveGeneration(targetDate: string, generationId: string
     .select({
       id: imageGenerations.id,
       verseId: imageGenerations.verseId,
+      slug: verses.slug,
     })
     .from(imageGenerations)
+    .innerJoin(verses, eq(verses.id, imageGenerations.verseId))
     .where(eq(imageGenerations.id, generationId))
     .limit(1);
 
@@ -472,6 +479,8 @@ export async function approveGeneration(targetDate: string, generationId: string
       .where(eq(dailyPublications.id, existingPublication[0].id))
       .returning();
 
+    revalidatePublicationCaches(targetDate, generation.slug);
+
     return updated;
   }
 
@@ -487,6 +496,8 @@ export async function approveGeneration(targetDate: string, generationId: string
       publishedAt: publicationStatus === "published" ? new Date() : null,
     })
     .returning();
+
+  revalidatePublicationCaches(targetDate, generation.slug);
 
   return created;
 }

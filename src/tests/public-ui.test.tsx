@@ -16,6 +16,7 @@ import type {
   VerseCardViewModel,
   VerseDetailScreenViewModel,
 } from "../components/daily-app/types";
+import { DetailVerseImage, HomeVerseHero } from "../components/daily-app/verse-card";
 
 const verse: VerseCardViewModel = {
   publishDate: "May 25, 2024",
@@ -54,8 +55,46 @@ test("verse detail screen keeps image, explanation, prayer, and sharing sections
   assert.match(html, /Download/);
   assert.match(html, /Explanation/);
   assert.match(html, /Prayer/);
-  assert.match(html, /Share with Others/);
-  assert.match(html, /Was this verse meaningful to you/);
+  assert.doesNotMatch(html, /Share with Others/);
+  assert.doesNotMatch(html, /Was this verse meaningful to you/);
+});
+
+test("verse artwork surfaces render the AI image without overlay text", () => {
+  const homeHtml = renderToStaticMarkup(<HomeVerseHero verse={verse} />);
+  const detailHtml = renderToStaticMarkup(<DetailVerseImage verse={verse} />);
+
+  assert.match(homeHtml, /<img/);
+  assert.match(homeHtml, /src="https:\/\/example\.com\/source\.png"/);
+  assert.match(homeHtml, /href="https:\/\/example\.com\/source\.png"/);
+  assert.match(homeHtml, /Share Image/);
+  assert.doesNotMatch(homeHtml, /bg-black\/45/);
+  assert.doesNotMatch(homeHtml, /drop-shadow/);
+  assert.match(detailHtml, /<img/);
+  assert.match(detailHtml, /src="https:\/\/example\.com\/source\.png"/);
+  assert.match(detailHtml, /href="https:\/\/example\.com\/source\.png"/);
+  assert.doesNotMatch(detailHtml, /bg-black\/45/);
+  assert.doesNotMatch(detailHtml, /drop-shadow/);
+});
+
+test("home actions sit after the image instead of on top of it", () => {
+  const homeHtml = renderToStaticMarkup(<HomeVerseHero verse={verse} />);
+  const detailHtml = renderToStaticMarkup(<DetailVerseImage verse={verse} />);
+
+  assert.ok(homeHtml.indexOf("<img") < homeHtml.indexOf("Read Explanation"));
+  assert.ok(homeHtml.indexOf("Read Explanation") < homeHtml.indexOf("Share Image"));
+  assert.ok(detailHtml.indexOf("<img") < detailHtml.indexOf("Share Image"));
+  assert.doesNotMatch(detailHtml, /text-center/);
+});
+
+test("verse detail keeps one share action area and avoids duplicate engagement sections", () => {
+  const data: VerseDetailScreenViewModel = { verse };
+  const html = renderToStaticMarkup(<VerseDetailScreen data={data} />);
+
+  assert.match(html, /Share Image/);
+  assert.doesNotMatch(html, /Share with Others/);
+  assert.doesNotMatch(html, /Was this verse meaningful to you/);
+  assert.doesNotMatch(html, /Facebook/);
+  assert.doesNotMatch(html, /WhatsApp/);
 });
 
 test("archive screen exposes search, filter, month grouping, and load more", () => {
@@ -95,4 +134,16 @@ test("public routes are thin data-to-screen adapters", async () => {
   assert.match(detailSource, /cardImagePortraitUrl/);
   assert.match(archiveSource, /getArchiveScreenData/);
   assert.doesNotMatch(archiveSource, /SiteHeader/);
+});
+
+test("publication generation stores the AI provider image directly", async () => {
+  const source = await readFile("src/lib/publication.ts", "utf8");
+
+  assert.doesNotMatch(source, /renderCardSvg/);
+  assert.doesNotMatch(source, /generation-\\$\\{generationVersion\\}-portrait\\.svg/);
+  assert.match(source, /cardImagePortraitUrl: imageUpload\.url/);
+  assert.match(source, /cardImageSimpleUrl: imageUpload\.url/);
+  assert.match(source, /cardImageExtendedUrl: imageUpload\.url/);
+  assert.match(source, /selectVerseForGeneration/);
+  assert.match(source, /triggerType === "manual_regenerate"/);
 });
